@@ -1,0 +1,35 @@
+[project]
+name = "super-resolution"
+version = "0.1.0"
+description = "Super Resolution Enhancement for Old Chinese Documents"
+readme = "README.md"
+requires-python = ">=3.8,<3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "opencv-python>=4.8.0",
+    "numpy>=1.24.0",
+    "Pillow>=10.0.0",
+    "tqdm>=4.65.0",
+    "requests>=2.31.0",
+    "matplotlib>=3.7.0",
+    "timm>=0.9.0",
+    "einops>=0.7.0",
+    "realesrgan>=0.3.0",
+    "basicsr>=1.4.2",
+]
+
+[project.scripts]
+enhance = "src.enhance:main"
+enhance-chinese = "enhance_chinese_docs:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+]
