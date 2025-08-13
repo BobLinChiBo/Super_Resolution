@@ -1,7 +1,8 @@
-torch>=2.0.0
-torchvision>=0.15.0
+# Core dependencies - compatible versions
+torch==1.13.1
+torchvision==0.14.1
 opencv-python>=4.8.0
-numpy>=1.24.0
+numpy>=1.24.0,<2.0
 Pillow>=10.0.0
 tqdm>=4.65.0
 requests>=2.31.0
@@ -10,3 +11,9 @@ timm>=0.9.0
 einops>=0.7.0
 realesrgan>=0.3.0
 basicsr>=1.4.2
+
+# NOTE: For GPU support with CUDA 11.7, install PyTorch with:
+# pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --index-url https://download.pytorch.org/whl/cu117
+#
+# For CPU only:
+# pip install torch==1.13.1+cpu torchvision==0.14.1+cpu --index-url https://download.pytorch.org/whl/cpu

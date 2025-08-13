@@ -1,273 +1,357 @@
-# Super Resolution for Old Chinese Documents
+# Document Image Super Resolution
 
-This project provides a super resolution system specifically optimized for enhancing old Chinese book pages and historical documents. It supports multiple state-of-the-art models and includes preprocessing options tailored for aged paper and traditional Chinese text.
+A powerful image enhancement tool for improving the quality of scanned documents, old texts, and photographs using state-of-the-art super-resolution AI models. Particularly effective for historical documents, manuscripts, and degraded images.
 
 ## Features
 
-- **Multiple Models**: Support for Real-ESRGAN, SwinIR, and BSRGAN
-- **Batch Processing**: Process hundreds of images automatically with progress tracking
-- **Document Optimization**: Special preprocessing for old documents including:
-  - Background cleaning for aged paper
-  - Contrast enhancement for faded text
-  - Text-specific sharpening
-- **Memory Management**: Automatic tiling for large images to prevent OOM errors
-- **Resume Capability**: Continue processing from where you left off
-- **GPU Acceleration**: Full CUDA support for fast processing
+- **Multiple AI Models**: Support for Real-ESRGAN, SwinIR, and BSRGAN models
+- **Document Enhancement**: Optimized preprocessing and postprocessing for text clarity
+- **Batch Processing**: Process entire folders of images with progress tracking
+- **Memory Management**: Automatic image tiling for large documents to prevent memory issues
+- **Background Cleaning**: Remove yellowing, stains, and artifacts from old documents
+- **Two-Stage Processing**: Advanced upscaling with better quality preservation
+- **Content Detection**: Automatically detect content type and select optimal model
+- **Resume Support**: Continue processing from where you left off
 
-## Installation
+## Quick Start
 
-### Option 1: Using UV (Recommended - Fast & Modern)
+### Prerequisites
 
-1. Clone the repository:
-```bash
-cd D:\GitHub\Super_Resolution
-```
+- Python 3.8 - 3.9 (PyTorch compatibility)
+- CUDA-capable GPU (recommended) or CPU
+- [uv](https://github.com/astral-sh/uv) package manager
+- CUDA 11.7 (for GPU acceleration)
 
-2. Install UV if you haven't already:
+### Installation with uv
+
+1. Install uv if you haven't already:
 ```bash
 # On Windows
-pip install uv
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-# Or using pipx
-pipx install uv
+# On macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-3. Create virtual environment and install dependencies:
+2. Clone the repository:
 ```bash
-# Create virtual environment
+git clone https://github.com/yourusername/Super_Resolution.git
+cd Super_Resolution
+```
+
+3. Configure uv for Windows (optional, prevents hardlink warnings):
+```bash
+# On Windows PowerShell
+$env:UV_LINK_MODE="copy"
+
+# Or set it permanently in your system environment variables
+# This prevents the "Failed to hardlink files" warning on Windows
+```
+
+4. Create virtual environment and install dependencies:
+```bash
+# Create and activate virtual environment
 uv venv
-
-# Activate the environment
-# On Windows (PowerShell)
+# On Windows
 .venv\Scripts\activate
+# On macOS/Linux
+source .venv/bin/activate
 
-# On Windows (Command Prompt)
-.venv\Scripts\activate.bat
+# Install the project and dependencies
+uv pip install -e . --link-mode=copy
 
-# Install all dependencies (including Real-ESRGAN and BasicSR)
-uv pip install -r requirements.txt
+# For GPU support (NVIDIA CUDA 11.7):
+uv pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --index-url https://download.pytorch.org/whl/cu117 --link-mode=copy
+
+# For CPU-only (no GPU required):
+# uv pip install torch==1.13.1+cpu torchvision==0.14.1+cpu --index-url https://download.pytorch.org/whl/cpu --link-mode=copy
 ```
 
-### Option 2: Using Traditional pip
-
-1. Clone the repository:
-```bash
-cd D:\GitHub\Super_Resolution
-```
-
-2. Create virtual environment (optional but recommended):
-```bash
-python -m venv venv
-
-# Activate the environment
-# On Windows (PowerShell)
-venv\Scripts\activate
-
-# On Windows (Command Prompt)
-venv\Scripts\activate.bat
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-### Verifying Installation
-
-After installation, verify everything is working:
-```bash
-# Quick import test
-python -c "import torch; import torchvision; print('Core dependencies installed successfully!')"
-
-# Full test (from project directory)
-.venv/Scripts/python.exe test_uv_setup.py
-```
-
-**Note**: You may see import warnings for realesrgan/basicsr due to version compatibility, but the models should still work correctly.
+5. Download model weights (automatic on first run):
+The models will be automatically downloaded when you first run the enhancement script.
 
 ## Usage
 
-### Quick Start - Optimized for Chinese Documents
+### Basic Usage
 
-Use the pre-configured script with best practices:
-
+Process all images in the input folder:
 ```bash
-# If using UV environment
-.venv/Scripts/python.exe enhance_chinese_docs.py
-
-# Or with UV directly
-uv run python enhance_chinese_docs.py
-
-# If using traditional pip/venv
-python enhance_chinese_docs.py
-```
-
-This uses optimized settings based on community experience:
-- `realesr-general-x4v3` model (best for text)
-- 2x upscaling (preserves thin strokes)
-- Two-stage processing with downsample to 300 DPI
-- Background cleaning and text enhancement
-
-### Manual Configuration
-
-Process all images with custom settings:
-
-```bash
-# If using UV environment
-.venv/Scripts/python.exe src/enhance.py --input-dir data/input --output-dir data/output
-
-# Or with UV directly
+# Using GPU (default)
 uv run python src/enhance.py --input-dir data/input --output-dir data/output
 
-# If using traditional pip/venv
-python src/enhance.py --input-dir data/input --output-dir data/output
+# Using CPU only (no GPU required)
+uv run python src/enhance.py --input-dir data/input --output-dir data/output --device cpu
+
+# Or if you've activated the virtual environment:
+python src/enhance.py --input-dir data/input --output-dir data/output --device cpu
 ```
 
-### Best Practice for Text Documents (Based on Research)
+### Common Use Cases
 
+#### Old Document Restoration
 ```bash
-python src/enhance.py \
-  --model realesrgan \
-  --model-variant realesr-general-x4v3 \
-  --scale 2 \
-  --two-stage \
-  --target-dpi 300 \
-  --preprocess \
-  --postprocess \
-  --enhance-text \
-  --clean-background \
-  --auto-detect
+# Test without preprocessing/postprocessing first
+uv run python src/enhance.py --scale 2 --clean-background
+
+# Then try with preprocessing/postprocessing to compare results
+uv run python src/enhance.py --scale 2 --preprocess --postprocess --clean-background --enhance-text
 ```
 
-### For Pure Line Art/Calligraphy
-
+#### High-Quality Book Scanning
 ```bash
-python src/enhance.py \
-  --model realesrgan \
-  --model-variant realesrgan-animevideo-xsx2 \
-  --scale 2 \
-  --two-stage \
-  --target-dpi 300
+uv run python src/enhance.py --scale 4 --two-stage --target-dpi 600 --quality 95
+```
+
+#### Photograph Enhancement
+```bash
+uv run python src/enhance.py --model-variant RealESRGAN_x4plus --scale 4
+```
+
+#### Handwritten Text / Calligraphy
+```bash
+uv run python src/enhance.py --model-variant realesrgan-animevideo-xsx2 --enhance-text
+```
+
+#### Large Format Documents
+```bash
+uv run python src/enhance.py --tile-size 1024 --max-memory-gb 8
 ```
 
 ### Command Line Arguments
 
-#### Input/Output Options
-- `--input-dir`: Directory containing input images (default: `data/input`)
-- `--output-dir`: Directory for enhanced images (default: `data/output`)
+#### Input/Output
+- `--input-dir`: Input directory containing images (default: `data/input`)
+- `--output-dir`: Output directory for enhanced images (default: `data/output`)
 
-#### Model Options
-- `--model`: Choose model: `realesrgan`, `swinir`, or `bsrgan` (default: `realesrgan`)
-- `--model-variant`: Specific Real-ESRGAN variant:
-  - `realesr-general-x4v3`: Best for documents/text (default)
-  - `realesr-general-wdn-x4v3`: With denoising
-  - `RealESRGAN_x4plus`: General purpose
-  - `realesrgan-animevideo-xsx2`: Best for line art/strokes
-- `--scale`: Upscaling factor: 2 or 4 (default: 2)
-- `--device`: Device to use: `cuda` or `cpu` (default: `cuda`)
+#### Model Selection
+- `--model`: Model type to use (`realesrgan`, `swinir`, `bsrgan`)
+- `--model-variant`: Specific model variant
+  - `realesr-general-x4v3`: Best for documents and text (default)
+  - `realesr-general-wdn-x4v3`: With denoising capability
+  - `RealESRGAN_x4plus`: General purpose, natural images
+  - `RealESRGAN_x2plus`: 2x upscaling only
+  - `realesrgan-animevideo-xsx2`: Good for line art and strokes
+  - `RealESRGAN_x4plus_anime_6B`: Illustration and artwork
 
-#### Enhancement Options
-- `--preprocess`: Apply preprocessing for old documents
-- `--postprocess`: Apply postprocessing for better clarity
-- `--enhance-text`: Apply text-specific enhancements
-- `--clean-background`: Clean aged paper background
-- `--background-threshold`: Threshold for background cleaning 0-255 (default: 240)
-- `--two-stage`: Use two-stage processing (upscale then downsample) - **Recommended**
-- `--target-dpi`: Target DPI for output (e.g., 300 for OCR, 600 for printing)
+#### Processing Options
+- `--scale`: Upscaling factor (2 or 4, default: 2)
+- `--preprocess`: Apply preprocessing for old/degraded documents (Note: may not always improve results - test first)
+- `--postprocess`: Apply postprocessing for better clarity (Note: may not always improve results - test first)
+- `--enhance-text`: Apply text-specific sharpening
+- `--clean-background`: Remove background stains and discoloration
+- `--background-threshold`: Threshold for background cleaning (0-255, default: 240)
+- `--two-stage`: Use two-stage processing for better quality
+- `--target-dpi`: Target DPI for output (e.g., 300, 600)
 - `--auto-detect`: Auto-detect content type and select best model
 
-#### Performance Options
-- `--batch-size`: Number of images to process in parallel (default: 1)
-- `--tile-size`: Tile size for large images (default: 1024)
+#### Performance
+- `--device`: Device to use (`cuda` for GPU or `cpu` for CPU-only processing, default: `cuda`)
+  - Use `cuda` for faster processing with NVIDIA GPU
+  - Use `cpu` if no GPU is available (slower but works everywhere)
+- `--batch-size`: Number of images to process in parallel
+- `--tile-size`: Tile size for large images (default: 1024, reduce for less memory usage)
 - `--max-memory-gb`: Maximum GPU memory to use (default: 6.0)
 
-#### Output Options
-- `--quality`: JPEG quality 1-100 (default: 95)
+#### Output
+- `--quality`: JPEG quality (1-100, default: 95)
 - `--resume`: Resume from previous run
-
-## Examples
-
-### Process with Maximum Quality
-```bash
-python src/enhance.py --model realesrgan --scale 4 --preprocess --postprocess --enhance-text --quality 100
-```
-
-### Fast Processing (2x scale)
-```bash
-python src/enhance.py --model realesrgan --scale 2 --device cuda
-```
-
-### Resume Previous Session
-```bash
-python src/enhance.py --resume
-```
-
-### CPU Processing (slower but no GPU required)
-```bash
-python src/enhance.py --device cpu --tile-size 512
-```
 
 ## Project Structure
 
 ```
 Super_Resolution/
-├── src/
-│   ├── enhance.py          # Main processing script
-│   ├── models.py           # Model implementations
-│   └── utils.py            # Helper functions
 ├── data/
-│   ├── input/              # Your original images
-│   └── output/             # Enhanced images
-├── models/                 # Downloaded model weights
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+│   ├── input/           # Place your source images here
+│   └── output/          # Enhanced images will be saved here
+├── models/              # Downloaded model weights (auto-created)
+├── src/
+│   ├── enhance.py       # Main enhancement script
+│   ├── models.py        # Model implementations
+│   └── utils.py         # Utility functions
+├── pyproject.toml       # Project configuration
+├── uv.lock             # Dependency lock file
+└── README.md           # This file
+```
+
+## Development
+
+### Setting up development environment
+
+```bash
+# Install development dependencies
+uv pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Format code
+black src/
+
+# Lint code
+flake8 src/
+```
+
+### Adding new dependencies
+
+```bash
+# Add a new dependency
+uv add package-name
+
+# Add a development dependency
+uv add --dev package-name
+
+# Update all dependencies
+uv sync
 ```
 
 ## Tips for Best Results
 
-1. **For Very Old/Damaged Documents**: Use all enhancement options:
-   ```bash
-   python src/enhance.py --preprocess --postprocess --enhance-text --clean-background
-   ```
+### Document Types
 
-2. **For Large Images**: The script automatically tiles large images to prevent memory issues
+1. **Printed Text Documents**
+   - Use `--scale 2` for most cases (readable text without excessive file size)
+   - Test with and without `--preprocess --postprocess` to see which gives better results
+   - Add `--enhance-text` for additional text sharpening if needed
+   - For yellowed/aged paper: `--clean-background --background-threshold 230`
 
-3. **Quality vs Speed**: 
-   - Use `--scale 2` for faster processing
-   - Use `--scale 4` for maximum quality
+2. **Handwritten Documents**
+   - Use `--model-variant realesrgan-animevideo-xsx2` (better for strokes)
+   - Keep `--scale 2` to preserve natural writing characteristics
+   - Avoid aggressive postprocessing
 
-4. **Memory Issues**: If you encounter OOM errors:
-   - Reduce `--tile-size` (e.g., 512)
-   - Reduce `--max-memory-gb`
-   - Use CPU processing with `--device cpu`
+3. **Mixed Content (Text + Images)**
+   - Use `--auto-detect` to automatically switch models
+   - Or use `--model-variant RealESRGAN_x4plus` for balanced results
 
-## Output
+4. **Historical Photographs**
+   - Use `--model-variant RealESRGAN_x4plus --scale 4`
+   - Skip text-specific options (`--enhance-text`)
 
-Enhanced images are saved with the naming pattern:
-`{original_name}_x{scale}_enhanced.jpg`
+5. **Technical Drawings / Diagrams**
+   - Use `--model-variant realesr-general-x4v3`
+   - Test `--preprocess --postprocess` to see if it improves line clarity
 
-A `progress.json` file in the output directory tracks:
-- Completed files
-- Failed files with error messages
-- Processing timestamps
+### Quality vs Speed Trade-offs
+
+- **Maximum Quality (GPU)**: `--two-stage --scale 4 --quality 95`
+- **Balanced (GPU)**: `--scale 2` (test with/without `--preprocess --postprocess`)
+- **Fast Processing (GPU)**: `--scale 2` with no additional options
+- **CPU Only Processing**: `--device cpu --tile-size 512`
+  - Note: CPU processing is 5-10x slower than GPU
+  - Reduce tile-size to 256 if running out of RAM
+
+## System Requirements
+
+### Minimum
+- 8GB RAM
+- 4GB VRAM (for GPU processing)
+- 10GB free disk space
+- Python 3.8+
+
+### Recommended
+- 16GB RAM
+- 8GB+ VRAM (NVIDIA GPU)
+- 20GB free disk space
+- NVIDIA GPU with CUDA 11.0+
 
 ## Troubleshooting
 
-1. **CUDA out of memory**: Reduce tile size or use CPU mode
-2. **Model download fails**: Check internet connection, models are downloaded on first use
-3. **Import errors**: Ensure all dependencies are installed, especially `realesrgan` and `basicsr`
+### Package Compatibility Issues
 
-## Performance
+If you encounter `ModuleNotFoundError: No module named 'torchvision.transforms.functional_tensor'`:
+```bash
+# This error occurs with newer PyTorch versions. The project requires specific versions:
+uv pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --index-url https://download.pytorch.org/whl/cu117
+uv pip install "numpy>=1.24.0,<2.0"
+```
 
-On a modern GPU (RTX 3070 or better):
-- ~5-15 seconds per image at 4x scale
-- ~2-5 seconds per image at 2x scale
+### CUDA not available
+```bash
+# Check CUDA availability
+python -c "import torch; print(torch.cuda.is_available())"
 
-Processing time depends on image size and selected options.
+# If false, either:
+# 1. Install CUDA toolkit matching your PyTorch version
+# 2. Use CPU processing: --device cpu
+```
 
-## Credits
+### Out of memory errors
+```bash
+# Reduce tile size
+python src/enhance.py --tile-size 512
 
-This project uses the following models:
-- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN)
-- [SwinIR](https://github.com/JingyunLiang/SwinIR) 
-- [BSRGAN](https://github.com/cszn/BSRGAN)
+# Limit GPU memory usage
+python src/enhance.py --max-memory-gb 4
+
+# Process one image at a time
+python src/enhance.py --batch-size 1
+```
+
+### Poor quality results
+- Try different model variants for your content type
+- Adjust preprocessing: experiment with `--background-threshold`
+- For noisy images: use `--model-variant realesr-general-wdn-x4v3`
+- For maximum detail: use `--two-stage --scale 4`
+
+### Installation issues with uv
+
+#### Hardlink warning on Windows
+If you see "Failed to hardlink files; falling back to full copy":
+```bash
+# Option 1: Set environment variable (temporary)
+$env:UV_LINK_MODE="copy"
+
+# Option 2: Use --link-mode flag
+uv pip install -e . --link-mode=copy
+
+# Option 3: Set permanently in Windows
+# Go to System Properties → Environment Variables → Add UV_LINK_MODE = copy
+```
+
+#### Other installation issues
+```bash
+# Clear uv cache
+uv cache clean
+
+# Reinstall with specific Python version
+uv venv --python 3.9
+uv pip install -e . --link-mode=copy
+```
+
+## Performance Benchmarks
+
+Typical processing times (NVIDIA RTX 3070, 8GB VRAM):
+- 1024x768 image, 2x scale: ~2-3 seconds
+- 1024x768 image, 4x scale: ~5-8 seconds
+- 4000x3000 image, 2x scale (with tiling): ~15-20 seconds
+- CPU processing: 5-10x slower than GPU
+
+## License
+
+This project is for educational and research purposes. The underlying models have their own licenses:
+- Real-ESRGAN: BSD 3-Clause License
+- BasicSR: Apache 2.0 License
+
+## Acknowledgments
+
+- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) by xinntao
+- [BasicSR](https://github.com/XPixelGroup/BasicSR) by XPixelGroup
+- [SwinIR](https://github.com/JingyunLiang/SwinIR) by JingyunLiang
+- [BSRGAN](https://github.com/cszn/BSRGAN) by cszn
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+
+## Citation
+
+If you use this tool in your research, please cite the underlying models you use:
+
+```bibtex
+@InProceedings{wang2021realesrgan,
+    author    = {Xintao Wang and Liangbin Xie and Chao Dong and Ying Shan},
+    title     = {Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data},
+    booktitle = {International Conference on Computer Vision Workshops (ICCVW)},
+    year      = {2021}
+}
+```

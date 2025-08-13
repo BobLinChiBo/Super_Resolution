@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Super Resolution Enhancement for Old Chinese Documents
+Super Resolution Enhancement for Old Documents
 Main script for batch processing images
 """
 
